@@ -1,4 +1,6 @@
 // Sudoku Board Module
+
+#[derive(Clone, Copy)]
 pub struct SudokuBoard {
     board: [[u8; 9]; 9],
 }
