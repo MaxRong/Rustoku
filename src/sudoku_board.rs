@@ -14,20 +14,20 @@ impl SudokuBoard {
 
     // Getters and Setters
     pub fn get(&self, cell: (u8, u8)) -> Option<u8> {
-        // Validate that the cell is on the board
+        // Validates that the cell is on the board and returns value if it is
         self.board
             .get(cell.0 as usize)?
             .get(cell.1 as usize)
             .copied()
     }
 
-    pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), ()> {
+    pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
         // Modify cell on board
         if self.validate_move(cell, num) {
             self.board[cell.0 as usize][cell.1 as usize] = num;
             Ok(())
         } else {
-            Err(())
+            Err("Error: Invalid move.")
         }
     }
 
@@ -56,9 +56,10 @@ impl SudokuBoard {
         // Convert cell coordinate tuple to usize row & column coords for indexing
         let (r, c) = (cell.0 as usize, cell.1 as usize);
 
-        // Ensure that cell is not occupied first
-        if self.board[r][c] != 0 {
-            return false
+        // Check that cell is within bounds, and is empty(0)
+        match self.get(cell) {
+            Some(0) => {} // If cell is empty, do nothing and continue.
+            _ => return false, // If None or Some(non-zero), return false.
         }
 
         // Check vertically for duplicates
