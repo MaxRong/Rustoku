@@ -32,6 +32,10 @@ A high-performance Sudoku engine and solver written in Rust.
     ```
 
 ---
+# License:
+This project is licensed under the MIT License.
+
+---
 # Author:
 - Max Rong
 
