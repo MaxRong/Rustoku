@@ -1,0 +1,97 @@
+// Sudoku Board Module
+pub struct SudokuBoard {
+    board: [[u8; 9]; 9],
+}
+
+impl SudokuBoard {
+    // Class Constructor
+    // Assume config always exists for now.
+    pub fn new(config: [[u8; 9]; 9]) -> Self {
+        SudokuBoard { board: config }
+    }
+
+    // Getters and Setters
+    pub fn get(&self, cell: (u8, u8)) -> Option<u8> {
+        // Validate that the cell is on the board
+        self.board
+            .get(cell.0 as usize)?
+            .get(cell.1 as usize)
+            .copied()
+    }
+
+    pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), ()> {
+        // Modify cell on board
+        if self.validate_move(cell, num) {
+            self.board[cell.0 as usize][cell.1 as usize] = num;
+            Ok(())
+        } else {
+            Err(())
+        }
+    }
+
+    pub fn print(&self) {
+        // Print the Sudoku Board in a human readable
+        println!("{}", "-".repeat(31));
+        println!("|     CURRENT BOARD STATE      |");
+        println!("{}", "-".repeat(31));
+        for (row_index, row) in self.board.iter().enumerate() {
+            print!("|");
+            for (col_index, &element) in row.iter().enumerate() {
+                print!(" {} ", element);
+                if (col_index + 1) % 3 == 0 {
+                    print!("|")
+                }
+            }
+            println!();
+            if (row_index + 1) % 3 == 0 {
+                println!("{}", "-".repeat(31));
+            }
+        }
+    }
+
+    // Check if a proposed move is legal
+    pub fn validate_move(&self, cell: (u8, u8), num: u8) -> bool {
+        // Convert cell coordinate tuple to usize row & column coords for indexing
+        let (r, c) = (cell.0 as usize, cell.1 as usize);
+
+        // Ensure that cell is not occupied first
+        if self.board[r][c] != 0 {
+            return false
+        }
+
+        // Check vertically for duplicates
+        for row in &self.board {
+            if row[c] == num {
+                return false
+            }
+        }
+        // Check horizontally for duplicates
+        for &element in &self.board[r] {
+            if element == num {
+                return false
+            }
+        }
+
+        // Calculate top-left corner of the 3x3 box.
+        let box_r_start: usize = (r / 3) * 3;
+        let box_c_start = (c / 3) * 3;
+        
+        // Check for duplicates in the 3x3 box without a heap allocation.
+        // Iterate over the 3 rows and 3 columns of the box.
+        for box_row_offset in 0..3 {
+            for box_col_offset in 0..3 {
+                let current_row = box_r_start + box_row_offset;
+                let current_col = box_c_start + box_col_offset;
+                if self.board[current_row][current_col] == num {
+                    return false;
+                }
+            }
+        }
+        // passes all tests
+        true
+    }
+}
+
+
+
+// TODO: Unit tests
