@@ -1,4 +1,5 @@
 // Sudoku Board Module
+use std::collections::HashSet;
 
 #[derive(Clone, Copy)]
 pub struct SudokuBoard {
@@ -8,8 +9,11 @@ pub struct SudokuBoard {
 impl SudokuBoard {
     // Class Constructor
     // Assume config always exists for now.
-    pub fn build(config: [[u8; 9]; 9]) -> Self {
-        SudokuBoard { board: config }
+    pub fn build(config: [[u8; 9]; 9]) -> Result<(Self), &'static str> {
+        if !Self::is_valid_config(&config) {
+            return Err("Error: Invalid config used in SudokuBoard::build().");
+        }
+        Ok(SudokuBoard { board: config })
     }
 
     // Getters and Setters
@@ -92,6 +96,47 @@ impl SudokuBoard {
             }
         }
         // passes all tests
+        true
+    }
+
+    pub fn is_valid_config(config: &[[u8; 9]; 9]) -> bool {
+        // Check rows and columns for duplicates
+        for i in 0..9 {
+            let mut row_seen = HashSet::with_capacity(9);
+            let mut col_seen = HashSet::with_capacity(9);
+            for j in 0..9 {
+                // Check the current row
+                if config[i][j] != 0 {
+                    // If the number is already in the set, it's a duplicate.
+                    if !row_seen.insert(config[i][j]) {
+                        return false;
+                    }
+                }
+                // Check the current column
+                if config[j][i] != 0 {
+                    if !col_seen.insert(config[j][i]) {
+                        return false;
+                    }
+                }
+            }
+        }
+
+        // Check 3x3 boxes for duplicates
+        for box_row in (0..9).step_by(3) {
+            for box_col in (0..9).step_by(3) {
+                let mut box_seen = HashSet::with_capacity(9);
+                for r in box_row..box_row + 3 {
+                    for c in box_col..box_col + 3 {
+                        if config[r][c] != 0 {
+                            if !box_seen.insert(config[r][c]) {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        // If no duplicates were found, the configuration is valid.
         true
     }
 }
