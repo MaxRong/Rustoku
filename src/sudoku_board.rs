@@ -23,12 +23,13 @@ impl SudokuBoard {
 
     pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
         // Modify cell on board
-        if self.validate_move(cell, num) {
-            self.board[cell.0 as usize][cell.1 as usize] = num;
-            Ok(())
-        } else {
-            Err("Error: Invalid move.")
+        if let Some(row) = self.board.get_mut(cell.0 as usize) {
+            if let Some(elem) = row.get_mut(cell.1 as usize) {
+                *elem = num;
+                return Ok(())
+            }
         }
+        Err("Error: Invalid move.")
     }
 
     pub fn print(&self) {
