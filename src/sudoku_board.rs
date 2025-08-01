@@ -8,7 +8,7 @@ pub struct SudokuBoard {
 impl SudokuBoard {
     // Class Constructor
     // Assume config always exists for now.
-    pub fn new(config: [[u8; 9]; 9]) -> Self {
+    pub fn build(config: [[u8; 9]; 9]) -> Self {
         SudokuBoard { board: config }
     }
 

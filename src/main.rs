@@ -15,7 +15,7 @@ fn main() {
         [7, 0, 3, 0, 1, 8, 0, 0, 0]
         ]; 
     
-    let mut board: SudokuBoard = SudokuBoard::new(config);
+    let mut board: SudokuBoard = SudokuBoard::build(config);
 
     board.print();
 
