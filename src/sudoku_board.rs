@@ -57,11 +57,18 @@ impl SudokuBoard {
         // Convert cell coordinate tuple to usize row & column coords for indexing
         let (r, c) = (cell.0 as usize, cell.1 as usize);
 
-        // Check that cell is within bounds, and is empty(0)
+        // Check that cell is within bounds, and move type is valid
         match self.get(cell) {
-            Some(0) => {} // If cell is empty, do nothing and continue.
-            _ => return false, // If None or Some(non-zero), return false.
+            None => { return false }, // If cell is out of bounds, it's invalid
+            Some(value) => {
+                // A move is invalid if you try to place a non-zero number
+                // onto a cell that already contains a non-zero number
+                if value !=0 && num != 0 { return false } 
+            },
         }
+
+        // If move num is 0, currently always return true.
+        if num == 0 { return true }
 
         // Check vertically for duplicates
         for row in &self.board {
