@@ -169,4 +169,82 @@ impl SudokuBoard {
 
 
 
-// TODO: Unit tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A valid Sudoku configuration for use in tests.
+    fn valid_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 6, 0, 4, 0, 0, 9, 7],
+            [0, 4, 0, 7, 3, 0, 0, 1, 0],
+            [0, 1, 7, 0, 9, 2, 0, 3, 0],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 0, 5, 0, 6, 0, 9, 0, 3],
+            [0, 2, 0, 0, 1, 0, 0, 0, 6],
+            [0, 5, 0, 9, 8, 0, 1, 6, 0],
+            [0, 9, 0, 0, 5, 6, 0, 7, 0],
+            [8, 6, 0, 0, 2, 0, 3, 0, 0],
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the second row.
+    fn invalid_row_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 0, 2, 6, 0, 7, 0, 1],
+            [6, 8, 0, 0, 7, 0, 0, 8, 0], // duplicate 8
+            [1, 9, 0, 0, 0, 4, 5, 0, 0],
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the second col.
+    fn invalid_col_config() -> [[u8; 9]; 9] {
+        [
+            [0, 9, 0, 2, 6, 0, 7, 0, 1],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 9, 0, 0, 0, 4, 5, 0, 0], // duplicate 9
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the top-right(1, 3) box.
+    fn invalid_box_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 0, 2, 6, 0, 7, 0, 1],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 9, 0, 0, 0, 4, 5, 0, 7], // duplicate 7
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    #[test]
+    fn test_build_valid_config() {
+        // The `build` function should succeed with a valid configuration.
+        assert!(SudokuBoard::build(valid_config()).is_ok());
+    }
+
+    #[test]
+    fn test_build_invalid_configs() {
+        // The `build` function should return an error for an invalid configuration.
+        assert!(SudokuBoard::build(invalid_row_config()).is_err());
+        assert!(SudokuBoard::build(invalid_col_config()).is_err());
+        assert!(SudokuBoard::build(invalid_box_config()).is_err());
+
+    }
+}
