@@ -271,4 +271,54 @@ mod tests {
         // Cell (0, 2) was part of the initial config (value is 6).
         assert!(board.set((0, 2), 5).is_err());
     }
+
+    #[test]
+    fn test_validate_move_valid() {
+        // Test validate_move() for a move that is valid.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 2 in cell (0, 0) should be valid.
+        assert!(board.validate_move((0, 0), 2));
+    }
+
+    #[test]
+    fn test_validate_move_invalid_row() {
+        // Test validate_move() for a move that conflicts with an existing number in the row.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 9 in cell (0, 0) should be invalid because 9 is already in row 0.
+        assert!(!board.validate_move((0, 0), 9));
+    }
+    
+    #[test]
+    fn test_validate_move_invalid_col() {
+        // Test validate_move() for a move that conflicts with an existing number in the column.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 1 in cell (0, 0) should be invalid because 1 is already in column 0.
+        assert!(!board.validate_move((0, 0), 1));
+    }
+
+    #[test]
+    fn test_validate_move_invalid_box() {
+        // Test validate_move() for a move that conflicts with an existing number in the 3x3 box.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 7 in cell (0, 0) should be invalid because 7 is already in the top-left box.
+        assert!(!board.validate_move((0, 0), 7));
+    }
+
+    #[test]
+    fn test_validate_move_overwrite_fails() {
+        // Test that validate_move() returns false when trying to overwrite an existing number.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Trying to place a 5 on cell (0, 2), which already contains a 6.
+        assert!(!board.validate_move((0, 2), 5));
+    }
+
+    #[test]
+    fn test_validate_move_clear_cell_is_valid() {
+        // Test that validate_move() returns true when clearing a cell (placing a 0).
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        // First, place a valid number.
+        board.set((0,0), 2).unwrap();
+        // Now, validating a move to clear it should be true.
+        assert!(board.validate_move((0, 0), 0));
+    }
 }
