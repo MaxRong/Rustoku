@@ -169,4 +169,156 @@ impl SudokuBoard {
 
 
 
-// TODO: Unit tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // A valid Sudoku configuration for use in tests.
+    fn valid_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 6, 0, 4, 0, 0, 9, 7],
+            [0, 4, 0, 7, 3, 0, 0, 1, 0],
+            [0, 1, 7, 0, 9, 2, 0, 3, 0],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 0, 5, 0, 6, 0, 9, 0, 3],
+            [0, 2, 0, 0, 1, 0, 0, 0, 6],
+            [0, 5, 0, 9, 8, 0, 1, 6, 0],
+            [0, 9, 0, 0, 5, 6, 0, 7, 0],
+            [8, 6, 0, 0, 2, 0, 3, 0, 0],
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the second row.
+    fn invalid_row_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 0, 2, 6, 0, 7, 0, 1],
+            [6, 8, 0, 0, 7, 0, 0, 8, 0], // duplicate 8
+            [1, 9, 0, 0, 0, 4, 5, 0, 0],
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the second col.
+    fn invalid_col_config() -> [[u8; 9]; 9] {
+        [
+            [0, 9, 0, 2, 6, 0, 7, 0, 1],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 9, 0, 0, 0, 4, 5, 0, 0], // duplicate 9
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    // An invalid configuration with a duplicate number in the top-right(1, 3) box.
+    fn invalid_box_config() -> [[u8; 9]; 9] {
+        [
+            [0, 0, 0, 2, 6, 0, 7, 0, 1],
+            [6, 0, 0, 0, 7, 0, 0, 8, 0],
+            [1, 9, 0, 0, 0, 4, 5, 0, 7], // duplicate 7
+            [8, 2, 0, 1, 0, 0, 0, 4, 0],
+            [0, 0, 4, 6, 0, 2, 9, 0, 0],
+            [0, 5, 0, 0, 0, 3, 0, 2, 8],
+            [0, 0, 9, 3, 0, 0, 0, 7, 4],
+            [0, 4, 0, 0, 5, 0, 0, 3, 6],
+            [7, 0, 3, 0, 1, 8, 0, 0, 0]
+        ]
+    }
+
+    #[test]
+    fn test_build_valid_config() {
+        // The `build` function should succeed with a valid configuration.
+        assert!(SudokuBoard::build(valid_config()).is_ok());
+    }
+
+    #[test]
+    fn test_build_invalid_configs() {
+        // The `build` function should return an error for an invalid configuration.
+        assert!(SudokuBoard::build(invalid_row_config()).is_err());
+        assert!(SudokuBoard::build(invalid_col_config()).is_err());
+        assert!(SudokuBoard::build(invalid_box_config()).is_err());
+    }
+
+    #[test]
+    fn test_get_value() {
+        // Test that get() retrieves the correct value from the board.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        assert_eq!(board.get((0, 2)), Some(6)); // Should be 6
+        assert_eq!(board.get((0, 0)), Some(0)); // Should be 0 
+        assert_eq!(board.get((9, 9)), None);   // Out of bounds
+    }
+
+    #[test]
+    fn test_set_on_empty_cell() {
+        // Test that we can set() a value on an empty cell.
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        assert!(board.set((0, 0), 5).is_ok());
+        assert_eq!(board.get((0, 0)), Some(5));
+    }
+
+    #[test]
+    fn test_set_on_initial_cell_fails() {
+        // Test that set() correctly fails when trying to modify a starting number.
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        // Cell (0, 2) was part of the initial config (value is 6).
+        assert!(board.set((0, 2), 5).is_err());
+    }
+
+    #[test]
+    fn test_validate_move_valid() {
+        // Test validate_move() for a move that is valid.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 2 in cell (0, 0) should be valid.
+        assert!(board.validate_move((0, 0), 2));
+    }
+
+    #[test]
+    fn test_validate_move_invalid_row() {
+        // Test validate_move() for a move that conflicts with an existing number in the row.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 9 in cell (0, 0) should be invalid because 9 is already in row 0.
+        assert!(!board.validate_move((0, 0), 9));
+    }
+    
+    #[test]
+    fn test_validate_move_invalid_col() {
+        // Test validate_move() for a move that conflicts with an existing number in the column.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 1 in cell (0, 0) should be invalid because 1 is already in column 0.
+        assert!(!board.validate_move((0, 0), 1));
+    }
+
+    #[test]
+    fn test_validate_move_invalid_box() {
+        // Test validate_move() for a move that conflicts with an existing number in the 3x3 box.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Placing a 7 in cell (0, 0) should be invalid because 7 is already in the top-left box.
+        assert!(!board.validate_move((0, 0), 7));
+    }
+
+    #[test]
+    fn test_validate_move_overwrite_fails() {
+        // Test that validate_move() returns false when trying to overwrite an existing number.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        // Trying to place a 5 on cell (0, 2), which already contains a 6.
+        assert!(!board.validate_move((0, 2), 5));
+    }
+
+    #[test]
+    fn test_validate_move_clear_cell_is_valid() {
+        // Test that validate_move() returns true when clearing a cell (placing a 0).
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        // First, place a valid number.
+        board.set((0,0), 2).unwrap();
+        // Now, validating a move to clear it should be true.
+        assert!(board.validate_move((0, 0), 0));
+    }
+}
