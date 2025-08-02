@@ -77,10 +77,14 @@ impl SudokuBoard {
 
     // Check if a proposed move is legal
     pub fn validate_move(&self, cell: (u8, u8), num: u8) -> bool {
-        // Convert cell coordinate tuple to usize row & column coords for indexing
         let (r, c) = (cell.0 as usize, cell.1 as usize);
 
-        // Check that cell is within bounds, and move type is valid
+        // A move is invalid if the number is not 0-9
+        if !(0..=9).contains(&num) {
+            return false;
+        }
+
+        // A move is invalid if the cell is out of bounds
         match self.get(cell) {
             None => { return false }, // If cell is out of bounds, it's invalid
             Some(value) => {
@@ -278,6 +282,14 @@ mod tests {
         let board = SudokuBoard::from(valid_config()).unwrap();
         // Placing a 2 in cell (0, 0) should be valid.
         assert!(board.validate_move((0, 0), 2));
+    }
+
+    #[test]
+    fn test_validate_move_invalid_num() {
+        // Test validate_move() for a move that is invalid.
+        let board = SudokuBoard::from(valid_config()).unwrap();
+        // Placing a 12 in cell (0, 0) should be invalid.
+        assert!(!board.validate_move((0, 0), 12));
     }
 
     #[test]
