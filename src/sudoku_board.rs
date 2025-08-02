@@ -103,17 +103,10 @@ impl SudokuBoard {
             return false;
         }
 
-        // Check vertically for duplicates
-        for row in &self.board {
-            if row[c] == num {
-                return false
-            }
-        }
-        // Check horizontally for duplicates
-        for &element in &self.board[r] {
-            if element == num {
-                return false
-            }
+        // Check for duplicates in the same row and column, ignoring the cell itself.
+        for i in 0..9 {
+            if self.board[r][i] == num && i != c { return false; }
+            if self.board[i][c] == num && i != r { return false; }
         }
 
         // Calculate top-left corner of the 3x3 box.
