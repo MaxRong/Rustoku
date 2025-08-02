@@ -245,6 +245,14 @@ mod tests {
         assert!(SudokuBoard::build(invalid_row_config()).is_err());
         assert!(SudokuBoard::build(invalid_col_config()).is_err());
         assert!(SudokuBoard::build(invalid_box_config()).is_err());
+    }
 
+    #[test]
+    fn test_get_value() {
+        // Test that get() retrieves the correct value from the board.
+        let board = SudokuBoard::build(valid_config()).unwrap();
+        assert_eq!(board.get((0, 2)), Some(6)); // Should be 6
+        assert_eq!(board.get((0, 0)), Some(0)); // Should be 0 
+        assert_eq!(board.get((9, 9)), None);   // Out of bounds
     }
 }
