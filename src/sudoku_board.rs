@@ -4,6 +4,7 @@ use std::collections::HashSet;
 #[derive(Clone, Copy)]
 pub struct SudokuBoard {
     board: [[u8; 9]; 9],
+    initial_mask: [[bool; 9]; 9],
 }
 
 impl SudokuBoard {
@@ -13,7 +14,20 @@ impl SudokuBoard {
         if !Self::is_valid_config(&config) {
             return Err("Error: Invalid config used in SudokuBoard::build().");
         }
-        Ok(SudokuBoard { board: config })
+
+        let mut initial_mask = [[false; 9]; 9];
+        for r in 0..9 {
+            for c in 0..9 {
+                if config[r][c] != 0 {
+                    initial_mask[r][c] = true;
+                }
+            }
+        }
+
+        Ok(SudokuBoard {
+            board: config,
+            initial_mask,
+        })
     }
 
     // Getters and Setters
@@ -26,9 +40,14 @@ impl SudokuBoard {
     }
 
     pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
-        // Modify cell on board
-        if let Some(row) = self.board.get_mut(cell.0 as usize) {
-            if let Some(elem) = row.get_mut(cell.1 as usize) {
+        let (r, c) = (cell.0 as usize, cell.1 as usize);
+        // Check if the cell is part of the initial configuration.
+        if self.initial_mask[r][c] {
+            return Err("Error: Cannot modify a starting number.");
+        }
+        // If not, proceed to place the number.
+        if let Some(row) = self.board.get_mut(r) {
+            if let Some(elem) = row.get_mut(c) {
                 *elem = num;
                 return Ok(())
             }
