@@ -10,7 +10,7 @@ pub struct SudokuBoard {
 impl SudokuBoard {
     // Class Constructor
     // Assume config always exists for now.
-    pub fn from(config: [[u8; 9]; 9]) -> Result<(Self), &'static str> {
+    pub fn from(config: [[u8; 9]; 9]) -> Result<Self, &'static str> {
         if !Self::is_valid_config(&config) {
             return Err("Error: Invalid config used in SudokuBoard::from().");
         }
