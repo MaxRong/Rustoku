@@ -29,8 +29,8 @@ impl SudokuBoard {
             initial_mask,
         })
     }
-
-    // Getters and Setters
+    
+    // Gets the value of a cell at the given coordinates.
     pub fn get(&self, cell: (u8, u8)) -> Option<u8> {
         // Validates that the cell is on the board and returns value if it is
         self.board
@@ -39,20 +39,43 @@ impl SudokuBoard {
             .copied()
     }
 
-    pub fn set(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
+    pub fn try_place(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
         let (r, c) = (cell.0 as usize, cell.1 as usize);
-        // Check if the cell is part of the initial configuration.
+
+        // Cell must be valid.
+        if r >= 9 || c >= 9 {
+            return Err("Error: Cell is out of bounds.");
+        }
+
+        // Modifying starting number is invalid.
         if self.initial_mask[r][c] {
             return Err("Error: Cannot modify a starting number.");
         }
-        // If not, proceed to place the number.
-        if let Some(row) = self.board.get_mut(r) {
-            if let Some(elem) = row.get_mut(c) {
-                *elem = num;
-                return Ok(())
-            }
+
+        // Clearing a cell is always valid.
+        if num == 0 {
+            self.board[r][c] = 0;
+            return Ok(());
         }
-        Err("Error: Invalid move.")
+
+        // Writing over a filled cell is invalid.
+        if self.board[r][c] != 0 {
+            return Err("Error: Cannot overwrite filled cell. Try clearing first.")
+        }
+
+        // Number must be valid (1-9).
+        if !(1..=9).contains(&num) {
+            return Err("Error: Number must be between 1 and 9.");
+        }
+
+        // Check for Sudoku rule conflicts.
+        if !self.is_placement_valid(cell, num) {
+            return Err("Error: Move conflicts with another number.");
+        }
+
+        // If all checks pass, make the move.
+        self.board[r][c] = num;
+        Ok(())
     }
 
     pub fn print(&self) {
@@ -75,33 +98,10 @@ impl SudokuBoard {
         }
     }
 
-    // Check if a proposed move is legal
-    pub fn validate_move(&self, cell: (u8, u8), num: u8) -> bool {
+    // Private helper to check if placing a number would violate Sudoku rules.
+    // Assumes cell and num are valid.
+    fn is_placement_valid(&self, cell: (u8, u8), num: u8) -> bool {
         let (r, c) = (cell.0 as usize, cell.1 as usize);
-
-        // A move is invalid if the number is not 0-9
-        if !(0..=9).contains(&num) {
-            return false;
-        }
-
-        // A move is invalid if the cell is out of bounds
-        if r >= 9 || c >= 9 {
-            return false;
-        }
-
-        // A move is invalid if it modifies a starting number.
-        if self.initial_mask[r][c] {
-            return false;
-        }
-        // A move clearing a non-starting number cell is valid.
-        if num == 0 {
-            return true;
-        }
-
-        // A move overwriting a filled cell is invalid.
-        if self.board[r][c] != 0 {
-            return false;
-        }
 
         // Check for duplicates in the same row and column, ignoring the cell itself.
         for i in 0..9 {
@@ -109,24 +109,21 @@ impl SudokuBoard {
             if self.board[i][c] == num && i != r { return false; }
         }
 
-        // Calculate top-left corner of the 3x3 box.
-        let box_r_start: usize = (r / 3) * 3;
-        let box_c_start = (c / 3) * 3;
-        
-        // Check for duplicates in the 3x3 box without a heap allocation.
-        // Iterate over the 3 rows and 3 columns of the box.
-        for box_row_offset in 0..3 {
-            for box_col_offset in 0..3 {
-                let current_row = box_r_start + box_row_offset;
-                let current_col = box_c_start + box_col_offset;
-                if self.board[current_row][current_col] == num {
+        // Check for duplicates in the 3x3 box, ignoring the cell itself.
+        let box_start_row = r - r % 3;
+        let box_start_col = c - c % 3;
+        for i in 0..3 {
+            for j in 0..3 {
+                let current_row = box_start_row + i;
+                let current_col = box_start_col + j;
+                if self.board[current_row][current_col] == num && (current_row != r || current_col != c) {
                     return false;
                 }
             }
         }
-        // passes all tests
         true
     }
+
 
     pub fn is_valid_config(config: &[[u8; 9]; 9]) -> bool {
         // Check rows and columns for duplicates
@@ -260,85 +257,41 @@ mod tests {
     }
 
     #[test]
-    fn test_set_on_empty_cell() {
-        // Test that we can set() a value on an empty cell.
+    fn test_try_place_scenarios() {
         let mut board = SudokuBoard::from(valid_config()).unwrap();
-        assert!(board.set((0, 0), 5).is_ok());
-        assert_eq!(board.get((0, 0)), Some(5));
-    }
 
-    #[test]
-    fn test_set_on_initial_cell_fails() {
-        // Test that set() correctly fails when trying to modify a starting number.
-        let mut board = SudokuBoard::from(valid_config()).unwrap();
-        // Cell (0, 2) was part of the initial config (value is 6).
-        assert!(board.set((0, 2), 5).is_err());
-    }
+        // --- Success Cases ---
+        // Placing a valid number on an empty cell.
+        assert!(board.try_place((0, 0), 2).is_ok());
+        assert_eq!(board.get((0, 0)), Some(2));
+        
+        // Clearing a placed number.
+        assert!(board.try_place((0, 0), 0).is_ok());
+        assert_eq!(board.get((0, 0)), Some(0));
 
-    #[test]
-    fn test_validate_move_valid() {
-        // Test validate_move() for a move that is valid.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 2 in cell (0, 0) should be valid.
-        assert!(board.validate_move((0, 0), 2));
-    }
+        // --- Failure Cases ---
+        // Overwriting a placed number with non-0 number
+        board.try_place((0, 0), 3);
+        assert!(!board.try_place((0, 0), 4).is_ok());
 
-    #[test]
-    fn test_validate_move_invalid_num() {
-        // Test validate_move() for a move that is invalid.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 12 in cell (0, 0) should be invalid.
-        assert!(!board.validate_move((0, 0), 12));
-    }
+        board.try_place((0, 0), 0); // clear placed number from previous test.
 
-    #[test]
-    fn test_validate_move_invalid_row() {
-        // Test validate_move() for a move that conflicts with an existing number in the row.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 9 in cell (0, 0) should be invalid because 9 is already in row 0.
-        assert!(!board.validate_move((0, 0), 9));
-    }
-    
-    #[test]
-    fn test_validate_move_invalid_col() {
-        // Test validate_move() for a move that conflicts with an existing number in the column.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 1 in cell (0, 0) should be invalid because 1 is already in column 0.
-        assert!(!board.validate_move((0, 0), 1));
-    }
+        // Trying to place on an initial number.
+        assert!(board.try_place((0, 2), 5).is_err());
 
-    #[test]
-    fn test_validate_move_invalid_box() {
-        // Test validate_move() for a move that conflicts with an existing number in the 3x3 box.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 7 in cell (0, 0) should be invalid because 7 is already in the top-left box.
-        assert!(!board.validate_move((0, 0), 7));
-    }
+        // Trying to place out of bounds.
+        assert!(board.try_place((9, 9), 5).is_err());
 
-    #[test]
-    fn test_validate_move_overwrite_placed_fails() {
-        // Test that validate_move() returns false when trying to overwrite a starting number.
-        let board = SudokuBoard::from(valid_config()).unwrap();
-        // Trying to place a 5 on cell (0, 2), which already contains a 6.
-        assert!(!board.validate_move((0, 2), 5));
-    }
+        // Trying to place an invalid number.
+        assert!(board.try_place((0, 0), 10).is_err());
 
-    #[test]
-    fn test_validate_move_overwrite_starting_fails() {
-        // Test that validate_move() returns false when trying to overwrite a placed number.
-        let mut board = SudokuBoard::from(valid_config()).unwrap();
-        // Placing a 3 on an empty square, and trying to overwrite it with a 5.
-        board.set((0, 1), 3);
-        assert!(!board.validate_move((0, 1), 5));
-    }
+        // Trying to place a number that conflicts with a row.
+        assert!(board.try_place((0, 0), 9).is_err());
 
-    #[test]
-    fn test_validate_move_clear_cell_is_valid() {
-        // Test that validate_move() returns true when clearing a cell (placing a 0).
-        let mut board = SudokuBoard::from(valid_config()).unwrap();
-        // First, place a valid number.
-        board.set((0,0), 2).unwrap();
-        // Now, try to clear it.
-        assert!(board.validate_move((0, 0), 0));
+        // Try to place a number that conflicts with a column.
+        assert!(board.try_place((0, 0), 1).is_err());
+
+        // Try to place a number that conflicts with a box.
+        assert!(board.try_place((0, 0), 4).is_err());
     }
 }
