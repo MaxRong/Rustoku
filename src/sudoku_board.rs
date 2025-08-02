@@ -255,4 +255,12 @@ mod tests {
         assert_eq!(board.get((0, 0)), Some(0)); // Should be 0 
         assert_eq!(board.get((9, 9)), None);   // Out of bounds
     }
+
+    #[test]
+    fn test_set_on_empty_cell() {
+        // Test that we can set() a value on an empty cell.
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        assert!(board.set((0, 0), 5).is_ok());
+        assert_eq!(board.get((0, 0)), Some(5));
+    }
 }
