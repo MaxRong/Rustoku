@@ -263,4 +263,12 @@ mod tests {
         assert!(board.set((0, 0), 5).is_ok());
         assert_eq!(board.get((0, 0)), Some(5));
     }
+
+    #[test]
+    fn test_set_on_initial_cell_fails() {
+        // Test that set() correctly fails when trying to modify a starting number.
+        let mut board = SudokuBoard::build(valid_config()).unwrap();
+        // Cell (0, 2) was part of the initial config (value is 6).
+        assert!(board.set((0, 2), 5).is_err());
+    }
 }
