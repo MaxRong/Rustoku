@@ -15,7 +15,7 @@ fn main() {
         [8, 6, 0, 0, 2, 0, 3, 0, 0],
     ];
     
-    let mut board: SudokuBoard = SudokuBoard::build(config).expect("Build failed"); // will panic if config is invalid.
+    let mut board: SudokuBoard = SudokuBoard::from(config).expect("Build failed"); // will panic if config is invalid.
 
     board.print();
 
