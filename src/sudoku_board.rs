@@ -85,17 +85,23 @@ impl SudokuBoard {
         }
 
         // A move is invalid if the cell is out of bounds
-        match self.get(cell) {
-            None => { return false }, // If cell is out of bounds, it's invalid
-            Some(value) => {
-                // A move is invalid if you try to place a non-zero number
-                // onto a cell that already contains a non-zero number
-                if value !=0 && num != 0 { return false } 
-            },
+        if r >= 9 || c >= 9 {
+            return false;
         }
 
-        // If move num is 0, currently always return true.
-        if num == 0 { return true }
+        // A move is invalid if it modifies a starting number.
+        if self.initial_mask[r][c] {
+            return false;
+        }
+        // A move clearing a non-starting number cell is valid.
+        if num == 0 {
+            return true;
+        }
+
+        // A move overwriting a filled cell is invalid.
+        if self.board[r][c] != 0 {
+            return false;
+        }
 
         // Check vertically for duplicates
         for row in &self.board {
@@ -317,11 +323,20 @@ mod tests {
     }
 
     #[test]
-    fn test_validate_move_overwrite_fails() {
-        // Test that validate_move() returns false when trying to overwrite an existing number.
+    fn test_validate_move_overwrite_placed_fails() {
+        // Test that validate_move() returns false when trying to overwrite a starting number.
         let board = SudokuBoard::from(valid_config()).unwrap();
         // Trying to place a 5 on cell (0, 2), which already contains a 6.
         assert!(!board.validate_move((0, 2), 5));
+    }
+
+    #[test]
+    fn test_validate_move_overwrite_starting_fails() {
+        // Test that validate_move() returns false when trying to overwrite a placed number.
+        let mut board = SudokuBoard::from(valid_config()).unwrap();
+        // Placing a 3 on an empty square, and trying to overwrite it with a 5.
+        board.set((0, 1), 3);
+        assert!(!board.validate_move((0, 1), 5));
     }
 
     #[test]
