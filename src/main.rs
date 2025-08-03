@@ -1,6 +1,8 @@
 mod sudoku_board;
+mod sudoku_solver;
 
 use sudoku_board::SudokuBoard;
+use sudoku_solver::BacktrackingSolver;
 
 fn main() {
     let config = [
@@ -16,7 +18,9 @@ fn main() {
     ];
     
     let mut board: SudokuBoard = SudokuBoard::from(config).expect("Build failed"); // will panic if config is invalid.
-
+    let mut solved_board = BacktrackingSolver::run(&board).unwrap();
     board.print();
+    println!("{}", "-".repeat(31));
+    solved_board.print();
 
 }
