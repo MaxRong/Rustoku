@@ -9,6 +9,7 @@ pub struct SudokuBoard {
 
 impl SudokuBoard {
     // Class Constructor
+    // Assume config always exists for now.
     pub fn from(config: [[u8; 9]; 9]) -> Result<Self, &'static str> {
         if !Self::is_valid_config(&config) {
             return Err("Error: Invalid config used in SudokuBoard::from().");
@@ -36,6 +37,11 @@ impl SudokuBoard {
             .get(cell.0 as usize)?
             .get(cell.1 as usize)
             .copied()
+    }
+
+    // Returns a reference to the board.
+    pub fn get_board(&self) -> &[[u8; 9]; 9] {
+        return &self.board;
     }
 
     pub fn try_place(&mut self, cell: (u8, u8), num: u8) -> Result<(), &'static str> {
@@ -97,9 +103,9 @@ impl SudokuBoard {
         }
     }
 
-    // Private helper to check if placing a number would violate Sudoku rules.
+    // Crate level helper to check if placing a number would violate Sudoku rules.
     // Assumes cell and num are valid.
-    fn is_placement_valid(&self, cell: (u8, u8), num: u8) -> bool {
+    pub(crate) fn is_placement_valid(&self, cell: (u8, u8), num: u8) -> bool {
         let (r, c) = (cell.0 as usize, cell.1 as usize);
 
         // Check for duplicates in the same row and column, ignoring the cell itself.
@@ -123,7 +129,12 @@ impl SudokuBoard {
         true
     }
 
-
+    // Crate level function -- Assumes cell & num are valid.
+    pub(crate) fn internal_place(&mut self, cell: (u8, u8), num: u8) {
+        self.board[cell.0 as usize][cell.1 as usize] = num;
+    }
+    
+    // Crate level function -- 
     pub fn is_valid_config(config: &[[u8; 9]; 9]) -> bool {
         // Check rows and columns for duplicates
         for i in 0..9 {
